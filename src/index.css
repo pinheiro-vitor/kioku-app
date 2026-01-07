@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    @apply bg-secondary/80 hover:bg-secondary rounded-full transition-colors;
+  }
+}
+
+@layer base {
+  :root {
+    /* Kyoto Animation inspired - soft, dreamy, pastel */
+    --background: 40 30% 98%;
+    --foreground: 220 20% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+
+    /* Soft teal/aqua - KyoAni signature */
+    --primary: 174 42% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 20% 30%;
+
+    --muted: 210 20% 94%;
+    --muted-foreground: 220 10% 50%;
+
+    /* Warm coral accent */
+    --accent: 12 80% 70%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 174 42% 55%;
+
+    --radius: 1rem;
+
+    /* Custom tokens */
+    --card-shadow: 0 4px 20px -4px hsl(220 20% 20% / 0.08);
+    --card-shadow-hover: 0 8px 30px -4px hsl(220 20% 20% / 0.15);
+    --modal-backdrop: hsl(220 20% 20% / 0.6);
+    --gradient-primary: linear-gradient(135deg, hsl(174 42% 55%), hsl(174 50% 65%));
+    --gradient-accent: linear-gradient(135deg, hsl(12 80% 70%), hsl(20 85% 75%));
+    --progress-bg: hsl(210 20% 92%);
+    --star-filled: hsl(45 100% 60%);
+    --star-empty: hsl(210 20% 85%);
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark theme - deep, cozy, anime night mode */
+    --background: 222 30% 12%;
+    --foreground: 40 20% 95%;
+
+    --card: 222 25% 16%;
+    --card-foreground: 40 20% 95%;
+
+    --popover: 222 25% 14%;
+    --popover-foreground: 40 20% 95%;
+
+    --primary: 174 50% 50%;
+    --primary-foreground: 222 30% 10%;
+
+    --secondary: 222 20% 22%;
+    --secondary-foreground: 40 20% 90%;
+
+    --muted: 222 20% 20%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 12 75% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 20% 25%;
+    --input: 222 20% 25%;
+    --ring: 174 50% 50%;
+
+    --card-shadow: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --card-shadow-hover: 0 8px 30px -4px hsl(0 0% 0% / 0.5);
+    --modal-backdrop: hsl(0 0% 0% / 0.75);
+    --gradient-primary: linear-gradient(135deg, hsl(174 50% 45%), hsl(174 55% 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(12 75% 55%), hsl(20 80% 65%));
+    --progress-bg: hsl(222 20% 25%);
+    --star-filled: hsl(45 100% 55%);
+    --star-empty: hsl(222 20% 30%);
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased relative min-h-screen overflow-x-hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display tracking-wide;
+  }
+}
+
+@layer components {
+  .card-kioku {
+    @apply bg-card rounded-2xl overflow-hidden transition-all duration-300;
+    box-shadow: var(--card-shadow);
+  }
+
+  .card-kioku:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-4px);
+  }
+
+  .btn-primary-gradient {
+    background: var(--gradient-primary);
+    @apply text-primary-foreground font-medium px-6 py-2 rounded-xl transition-all duration-300;
+  }
+
+  .btn-primary-gradient:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+  }
+
+  .btn-accent-gradient {
+    background: var(--gradient-accent);
+    @apply text-accent-foreground font-medium px-6 py-2 rounded-xl transition-all duration-300;
+  }
+
+  .btn-accent-gradient:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+  }
+
+  .progress-circle-bg {
+    stroke: var(--progress-bg);
+  }
+
+  .progress-circle-fill {
+    stroke: hsl(var(--primary));
+  }
+
+  .star-filled {
+    color: var(--star-filled);
+  }
+
+  .star-empty {
+    color: var(--star-empty);
+  }
+
+  .modal-backdrop {
+    background: var(--modal-backdrop);
+  }
+
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
