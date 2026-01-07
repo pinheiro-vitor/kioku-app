@@ -2,7 +2,7 @@
 
 Kioku ("Memory" in Japanese) is a modern, privacy-focused application for tracking your Anime and Manga progress. Built with a stunning UI and powerful cloud synchronization, it helps you keep your collection organized across all your devices.
 
-![Kioku Banner](https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=2670&auto=format&fit=crop)
+![Kioku Banner](https://unsplash.com/photos/IxDPZ-AHfoI/download)
 
 ## Features
 
@@ -22,7 +22,7 @@ Kioku ("Memory" in Japanese) is a modern, privacy-focused application for tracki
 
 ## Getting Started
 
-### Prerequisites
+### Pre-requisites
 - Node.js installed
 - A Supabase project (for backend)
 
@@ -51,6 +51,9 @@ Kioku ("Memory" in Japanese) is a modern, privacy-focused application for tracki
    npm run dev
    ```
 
+
 ## License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+![Library Shelf](https://unsplash.com/photos/ilZ_h1ftS2c/download)
