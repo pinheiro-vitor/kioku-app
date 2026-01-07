@@ -71,9 +71,37 @@ export function useMediaLibrary() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Fetch Custom Lists (TODO: Implement in Supabase)
-  const customLists: CustomList[] = [];
-  const isLoadingLists = false;
+  // Fetch Custom Lists
+  const { data: customLists = [], isLoading: isLoadingLists } = useQuery({
+    queryKey: ['custom-lists'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+
+      const { data, error } = await supabase
+        .from('custom_lists')
+        .select(`
+          *,
+          media_list_items (media_id)
+        `)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching lists:', error);
+        throw error;
+      }
+
+      return data.map((list: any) => ({
+        id: list.id,
+        name: list.name,
+        description: list.description,
+        icon: list.icon,
+        color: list.color,
+        itemIds: list.media_list_items?.map((i: any) => i.media_id) || [],
+        createdAt: list.created_at,
+      }));
+    }
+  });
 
   const isLoaded = !isLoadingItems && !isLoadingLists;
 
@@ -194,6 +222,78 @@ export function useMediaLibrary() {
     }
   });
 
+  // Custom List Mutations
+  const addCustomListMutation = useMutation({
+    mutationFn: async (list: { name: string; description?: string; icon?: string; color?: string }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { error } = await supabase.from('custom_lists').insert({
+        user_id: session.user.id,
+        name: list.name,
+        description: list.description,
+        icon: list.icon || 'Heart',
+        color: list.color || '#ef4444'
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
+      toast({ title: 'Lista criada com sucesso!' });
+    }
+  });
+
+  const updateCustomListMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      const { error } = await supabase.from('custom_lists').update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
+      toast({ title: 'Lista atualizada!' });
+    }
+  });
+
+  const deleteCustomListMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('custom_lists').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
+      toast({ title: 'Lista removida.' });
+    }
+  });
+
+  const addItemToListMutation = useMutation({
+    mutationFn: async ({ listId, mediaId }: { listId: string; mediaId: string }) => {
+      const { error } = await supabase.from('media_list_items').insert({
+        list_id: listId,
+        media_id: mediaId
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
+      toast({ title: 'Adicionado à lista!' });
+    }
+  });
+
+  const removeItemFromListMutation = useMutation({
+    mutationFn: async ({ listId, mediaId }: { listId: string; mediaId: string }) => {
+      const { error } = await supabase.from('media_list_items')
+        .delete()
+        .eq('list_id', listId)
+        .eq('media_id', mediaId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
+      toast({ title: 'Removido da lista.' });
+    }
+  });
+
+  // Wrappers to match previous API
   // Wrappers to match previous API
   const addItem = (item: CreateMediaItemDTO) => addItemMutation.mutateAsync(item);
   const updateItem = (id: string, updates: UpdateMediaItemDTO) => updateItemMutation.mutateAsync({ id, updates });
@@ -204,12 +304,11 @@ export function useMediaLibrary() {
     await updateItem(id, { isFavorite: !item.isFavorite });
   };
 
-  // Custom List Placeholders (Not yet implemented in Supabase schema)
-  const addCustomList = async (list: any) => { };
-  const updateCustomList = async (id: string, updates: any) => { };
-  const deleteCustomList = async (id: string) => { };
-  const addItemToList = async (itemId: string, listId: string) => { };
-  const removeItemFromList = async (itemId: string, listId: string) => { };
+  const addCustomList = (list: any) => addCustomListMutation.mutateAsync(list);
+  const updateCustomList = (id: string, updates: any) => updateCustomListMutation.mutateAsync({ id, updates });
+  const deleteCustomList = (id: string) => deleteCustomListMutation.mutateAsync(id);
+  const addItemToList = (itemId: string, listId: string) => addItemToListMutation.mutateAsync({ listId, mediaId: itemId });
+  const removeItemFromList = (itemId: string, listId: string) => removeItemFromListMutation.mutateAsync({ listId, mediaId: itemId });
 
   // Read-only helpers
   const getItemsByType = (type: MediaType | 'all') => {

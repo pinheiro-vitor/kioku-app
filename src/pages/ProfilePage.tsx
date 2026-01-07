@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 
-import { Mail, Calendar, TrendingUp, Clock, Play, BookOpen, CheckCircle, Trophy, X, Heart, Medal, Star, Sword, Anchor, Zap, FlaskConical, Ghost, Search, Globe, Bot, Brain, Activity, User as UserIcon, Lock, Settings } from 'lucide-react';
+import { Mail, Calendar, TrendingUp, Clock, Play, BookOpen, CheckCircle, Trophy, X, Heart, Medal, Star, Sword, Anchor, Zap, FlaskConical, Ghost, Search, Globe, Bot, Brain, Activity, User as UserIcon, Lock, Settings, Camera } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -90,6 +91,52 @@ export default function UserProfile({ }: UserProfileProps) {
             setEditConfirmPassword('');
         } catch (error) {
             toast({ title: 'Erro', description: 'Falha ao atualizar perfil.', variant: 'destructive' });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !user) return;
+
+        try {
+            setIsUpdating(true);
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // Get Public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            // Update Profile
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    avatar_url: publicUrl,
+                    updated_at: new Date().toISOString(),
+                });
+
+            if (updateError) throw updateError;
+
+            toast({ title: 'Sucesso', description: 'Foto de perfil atualizada!' });
+
+            // Force reload to update context (temporary solution)
+            window.location.reload();
+
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+            toast({ title: 'Erro', description: 'Falha ao atualizar foto.', variant: 'destructive' });
         } finally {
             setIsUpdating(false);
         }
@@ -292,11 +339,24 @@ export default function UserProfile({ }: UserProfileProps) {
                         <Trophy className="h-64 w-64" />
                     </div>
 
-                    <div className="relative">
-                        <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} />
-                            <AvatarFallback className="text-4xl">{user?.name?.charAt(0)}</AvatarFallback>
-                        </Avatar>
+                    <div className="relative group cursor-pointer">
+                        <input
+                            type="file"
+                            id="avatar-upload"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleAvatarUpload}
+                            disabled={isUpdating}
+                        />
+                        <label htmlFor="avatar-upload" className="cursor-pointer">
+                            <Avatar className="h-32 w-32 border-4 border-background shadow-xl transition-opacity group-hover:opacity-80">
+                                <AvatarImage src={user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name}`} className="object-cover" />
+                                <AvatarFallback className="text-4xl">{user?.name?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-full">
+                                <Camera className="h-8 w-8 text-white" />
+                            </div>
+                        </label>
                         <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full shadow-lg border-2 border-background">
                             Lvl {level}
                         </div>

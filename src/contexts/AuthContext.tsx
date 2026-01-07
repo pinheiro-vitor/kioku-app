@@ -8,6 +8,7 @@ interface User {
     id: string | number; // Allowing string for UUID
     name: string;
     email: string;
+    avatarUrl?: string;
 }
 
 interface AuthContextType {
@@ -30,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) {
-                mapSupabaseUser(session.user, session.access_token);
+                fetchAndMapSupabaseUser(session.user, session.access_token);
             } else {
                 setIsLoading(false);
             }
@@ -39,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
-                mapSupabaseUser(session.user, session.access_token);
+                fetchAndMapSupabaseUser(session.user, session.access_token);
             } else {
                 setUser(null);
                 setToken(null);
@@ -50,15 +51,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => subscription.unsubscribe();
     }, []);
 
-    const mapSupabaseUser = (sbUser: SupabaseUser, accessToken: string) => {
-        const mappedUser: User = {
-            id: sbUser.id,
-            email: sbUser.email || '',
-            name: sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'Usuário',
-        };
-        setUser(mappedUser);
-        setToken(accessToken);
-        setIsLoading(false);
+    const fetchAndMapSupabaseUser = async (sbUser: SupabaseUser, accessToken: string) => {
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('avatar_url')
+                .eq('id', sbUser.id)
+                .single();
+
+            const mappedUser: User = {
+                id: sbUser.id,
+                email: sbUser.email || '',
+                name: sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'Usuário',
+                avatarUrl: profile?.avatar_url
+            };
+            setUser(mappedUser);
+            setToken(accessToken);
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            // Fallback if profile fetch fails
+            const mappedUser: User = {
+                id: sbUser.id,
+                email: sbUser.email || '',
+                name: sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'Usuário',
+            };
+            setUser(mappedUser);
+            setToken(accessToken);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Legacy login - now mostly no-op or just state update if needed manually

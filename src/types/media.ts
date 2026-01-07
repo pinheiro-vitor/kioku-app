@@ -66,10 +66,10 @@ export interface Comment {
 export interface CustomList {
   id: string;
   name: string;
-  description: string;
-  icon: string;
-  color: string;
-  itemIds: string[];
+  description?: string;
+  icon?: string;
+  color?: string;
+  itemIds?: string[]; // IDs of media items in this list
   createdAt: string;
 }
 

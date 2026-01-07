@@ -18,8 +18,8 @@ interface CustomListsManagerProps {
   lists: CustomList[];
   activeList: string | null;
   onSelectList: (listId: string | null) => void;
-  onAddList: (list: Omit<CustomList, 'id' | 'createdAt'>) => void;
-  onUpdateList: (id: string, updates: Partial<CustomList>) => void;
+  onAddList: (list: { name: string; description?: string; icon?: string; color?: string }) => void;
+  onUpdateList: (id: string, updates: any) => void;
   onDeleteList: (id: string) => void;
   onAddMedia?: () => void;
 }
@@ -54,18 +54,21 @@ export function CustomListsManager({
     description: '',
     icon: 'Heart',
     color: '#ef4444',
-    itemIds: [] as string[],
   });
 
   const handleCreate = () => {
     if (newList.name.trim()) {
-      onAddList(newList);
+      onAddList({
+        name: newList.name,
+        description: newList.description,
+        icon: newList.icon,
+        color: newList.color,
+      });
       setNewList({
         name: '',
         description: '',
         icon: 'Heart',
         color: '#ef4444',
-        itemIds: [],
       });
       setIsCreateOpen(false);
     }
@@ -83,7 +86,7 @@ export function CustomListsManager({
     }
   };
 
-  const getIcon = (iconName: string) => {
+  const getIcon = (iconName: string = 'Heart') => {
     const found = ICONS.find((i) => i.name === iconName);
     return found ? found.icon : Heart;
   };
@@ -110,21 +113,26 @@ export function CustomListsManager({
 
         {lists.map((list) => {
           const Icon = getIcon(list.icon);
+          const isActive = activeList === list.id;
+          const color = list.color || '#ef4444';
+
           return (
             <div key={list.id} className="relative group">
               <button
                 onClick={() => onSelectList(list.id)}
                 className={cn(
                   'px-3 py-1.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
-                  activeList === list.id
-                    ? 'text-primary-foreground'
+                  isActive
+                    ? 'text-white'
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                 )}
-                style={activeList === list.id ? { backgroundColor: list.color } : {}}
+                style={isActive ? { backgroundColor: color } : {}}
               >
-                <Icon className="h-4 w-4" style={{ color: activeList === list.id ? 'inherit' : list.color }} />
+                <Icon className="h-4 w-4" style={{ color: isActive ? 'inherit' : color }} />
                 {list.name}
-                <span className="text-xs opacity-70">({list.itemIds.length})</span>
+                <span className={cn("text-xs", isActive ? "opacity-80" : "opacity-50")}>
+                  ({(list.itemIds || []).length})
+                </span>
               </button>
 
               {/* Edit/Delete buttons on hover */}
@@ -182,9 +190,11 @@ export function CustomListsManager({
                   className="rounded-xl"
                 />
               </div>
+
+              {/* Icon Selection */}
               <div className="space-y-2">
                 <Label>Ícone</Label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {ICONS.map(({ name, icon: Icon }) => (
                     <button
                       key={name}
@@ -202,9 +212,11 @@ export function CustomListsManager({
                   ))}
                 </div>
               </div>
+
+              {/* Color Selection */}
               <div className="space-y-2">
                 <Label>Cor</Label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {COLORS.map((color) => (
                     <button
                       key={color}
@@ -219,6 +231,7 @@ export function CustomListsManager({
                   ))}
                 </div>
               </div>
+
               <Button variant="gradient" onClick={handleCreate} className="w-full mt-4">
                 Criar Lista
               </Button>
@@ -270,9 +283,33 @@ export function CustomListsManager({
                   className="rounded-xl"
                 />
               </div>
+
+              {/* Edit Icon */}
+              <div className="space-y-2">
+                <Label>Ícone</Label>
+                <div className="flex gap-2 flex-wrap">
+                  {ICONS.map(({ name, icon: Icon }) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => setEditingList({ ...editingList, icon: name })}
+                      className={cn(
+                        'w-10 h-10 rounded-lg flex items-center justify-center transition-all',
+                        editingList.icon === name
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Edit Color */}
               <div className="space-y-2">
                 <Label>Cor</Label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {COLORS.map((color) => (
                     <button
                       key={color}
@@ -287,6 +324,7 @@ export function CustomListsManager({
                   ))}
                 </div>
               </div>
+
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => setEditingList(null)} className="flex-1">
                   Cancelar
