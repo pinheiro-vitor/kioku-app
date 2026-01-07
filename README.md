@@ -1,8 +1,8 @@
-# Kioku (記憶) - Rastreador de Anime & Mangá
+# Kioku (記憶) - Biblioteca de Anime & Mangá
 
-Kioku ("Memória" em japonês) começou como uma solução pessoal para um problema comum: acompanhar inúmeros animes e mangás sem perder o fio da meada.
+Kioku ("Memória" em japonês) começou como uma solução pessoal para um problema comum: acompanhar inúmeros animes e mangás sem se perder.
 
-Insatisfeito com os designs poluídos dos aplicativos existentes no mercado, criei o Kioku para servir como uma biblioteca pessoal imaculada — um lugar para preservar a memória de cada história vivida. Hoje, ele é uma aplicação moderna focada em privacidade, com uma interface deslumbrante e sincronização em nuvem robusta, projetada para manter sua coleção organizada em todos os seus dispositivos.
+Insatisfeito com os designs poluídos dos aplicativos existentes no mercado, criei o Kioku para servir como uma biblioteca pessoal imaculada, um lugar para preservar a memória de cada história vivida. Hoje, ele é uma aplicação moderna projetada para manter sua coleção organizada em todos os seus dispositivos. Também vai servir para indicar obras para meus amigos, já que eles geralmente gostam de obras que eu apresento.
 
 ![Kioku Banner](https://unsplash.com/photos/IxDPZ-AHfoI/download)
 
