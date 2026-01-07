@@ -1,59 +1,60 @@
-# Kioku (記憶) - Anime & Manga Tracker
+# Kioku (記憶) - Rastreador de Anime & Mangá
 
-Kioku ("Memory" in Japanese) is a modern, privacy-focused application for tracking your Anime and Manga progress. Built with a stunning UI and powerful cloud synchronization, it helps you keep your collection organized across all your devices.
+Kioku ("Memória" em japonês) começou como uma solução pessoal para um problema comum: acompanhar inúmeros animes e mangás sem perder o fio da meada.
+
+Insatisfeito com os designs poluídos dos aplicativos existentes no mercado, criei o Kioku para servir como uma biblioteca pessoal imaculada — um lugar para preservar a memória de cada história vivida. Hoje, ele é uma aplicação moderna focada em privacidade, com uma interface deslumbrante e sincronização em nuvem robusta, projetada para manter sua coleção organizada em todos os seus dispositivos.
 
 ![Kioku Banner](https://unsplash.com/photos/IxDPZ-AHfoI/download)
 
-## Features
+## Funcionalidades
 
-- 📚 **Universal Library**: Track Anime, Manga, and Manhwa in one place.
-- ☁️ **Cloud Sync**: Powered by **Supabase**, your data is safely stored in the cloud and accessible anywhere.
-- 📅 **Interactive Calendar**: Manual weekly schedule to keep track of airing episodes.
-- 📊 **Statistics**: Detailed insights into your watching habits, top genres, and time spent.
-- 🎨 **Modern Design**: A beautiful, dark-themed UI built with Tailwind CSS and Shadcn/UI.
-- 🔐 **Secure Auth**: Full authentication system with email/password support.
+- 📚 **Biblioteca Universal**: Acompanhe Anime, Mangá e Manhwa em um único lugar.
+- ☁️ **Sincronização em Nuvem**: Com tecnologia **Supabase**, seus dados ficam salvos na nuvem e acessíveis de qualquer lugar.
+- 📅 **Calendário Interativo**: Agenda semanal manual para controlar episódios em lançamento.
+- 📊 **Estatísticas**: Insights detalhados sobre seus hábitos, gêneros favoritos e tempo gasto.
+- 🎨 **Design Moderno**: Uma interface linda com tema escuro, construída com Tailwind CSS e Shadcn/UI.
+- 🔐 **Autenticação Segura**: Sistema completo de login com e-mail/senha.
 
-## Tech Stack
+## Tecnologias
 
 - **Frontend**: React + TypeScript (Vite)
-- **Styling**: Tailwind CSS + Shadcn/UI
-- **Backend / Database**: Supabase (PostgreSQL + Auth)
-- **State Management**: TanStack Query
+- **Estilo**: Tailwind CSS + Shadcn/UI
+- **Backend / Banco de Dados**: Supabase (PostgreSQL + Auth)
+- **Gerenciamento de Estado**: TanStack Query
 
-## Getting Started
+## Começando
 
-### Pre-requisites
-- Node.js installed
-- A Supabase project (for backend)
+### Pré-requisitos
+- Node.js instalado
+- Um projeto Supabase (para o backend)
 
-### Installation
+### Instalação
 
-1. Clone the repository:
+1. Clone o repositório:
    ```bash
    git clone https://github.com/pinheiro-vitor/kioku-app.git
    cd kioku-app
    ```
 
-2. Install dependencies:
+2. Instale as dependências:
    ```bash
    npm install
    ```
 
-3. Configure Environment:
-   Create a `.env` file in the root directory:
+3. Configure o Ambiente:
+   Crie um arquivo `.env` na raiz do projeto:
    ```env
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_SUPABASE_URL=sua_url_supabase
+   VITE_SUPABASE_ANON_KEY=sua_chave_anonima_supabase
    ```
 
-4. Run the app:
+4. Rode o app:
    ```bash
    npm run dev
    ```
 
+## Licença
 
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
+Este projeto é open source e está disponível sob a [Licença MIT](LICENSE).
 
 ![Library Shelf](https://unsplash.com/photos/ilZ_h1ftS2c/download)
