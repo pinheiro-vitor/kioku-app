@@ -7,8 +7,12 @@ use App\Models\User;
 use App\Models\Comment;
 use App\Models\CustomList;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+
 class MediaItem extends Model
 {
+    use HasUuids;
+
     // Use guarded = [] to allow all fields to be fillable (as we validate in Controller)
     protected $guarded = [];
 
@@ -20,6 +24,8 @@ class MediaItem extends Model
         'tags' => 'array',
         'custom_lists' => 'array',
         'user_streaming' => 'array',
+        'streaming_services' => 'array',
+        'related_media' => 'array',
         'score' => 'decimal:2',
     ];
 
@@ -35,6 +41,11 @@ class MediaItem extends Model
 
     public function customLists()
     {
-        return $this->belongsToMany(CustomList::class, 'custom_list_items');
+        return $this->belongsToMany(CustomList::class, 'media_list_items');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }
