@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
     const [name, setName] = useState('');
@@ -13,6 +12,8 @@ export default function RegisterPage() {
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    const { register } = useAuth(); // Destructure register from useAuth
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,21 +25,16 @@ export default function RegisterPage() {
         }
 
         try {
-            const { data, error } = await supabase.auth.signUp({
+            await register({
+                name,
                 email,
                 password,
-                options: {
-                    data: {
-                        name: name,
-                    }
-                }
+                password_confirmation: passwordConfirmation
             });
 
-            if (error) throw error;
-
-            navigate('/');
+            navigate('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'Falha ao registrar');
+            setError(err.response?.data?.message || 'Falha ao registrar');
         }
     };
 

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import api from '@/lib/api';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -17,16 +17,16 @@ export default function LoginPage() {
         e.preventDefault();
         setError('');
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const response = await api.post('/login', {
                 email,
-                password,
+                password
             });
 
-            if (error) throw error;
+            login(response.data.access_token, response.data.user);
 
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'Falha ao fazer login');
+            setError(err.response?.data?.message || 'Falha ao fazer login');
         }
     };
 

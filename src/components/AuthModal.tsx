@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext'; // Added useAuth
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import api from '@/lib/api';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { toast } = useToast();
+    const { login, register } = useAuth();
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,18 +29,22 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
         try {
             if (isSignUp) {
-                const { error } = await supabase.auth.signUp({
+                await register({
+                    name: email.split('@')[0],
                     email,
                     password,
+                    password_confirmation: password
                 });
-                if (error) throw error;
-                toast({ title: 'Verifique seu email', description: 'Um link de confirmação foi enviado.' });
+                toast({ title: 'Conta criada com sucesso!', description: 'Você já está logado.' });
+                onSuccess();
+                onClose();
             } else {
-                const { error } = await supabase.auth.signInWithPassword({
+                const response = await api.post('/login', {
                     email,
-                    password,
+                    password
                 });
-                if (error) throw error;
+                login(response.data.access_token, response.data.user);
+
                 toast({ title: 'Login realizado com sucesso!' });
                 onSuccess();
                 onClose();
@@ -46,7 +52,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         } catch (error: any) {
             toast({
                 title: 'Erro',
-                description: error.message || 'Ocorreu um erro na autenticação',
+                description: error.response?.data?.message || 'Ocorreu um erro na autenticação',
                 variant: 'destructive'
             });
         } finally {

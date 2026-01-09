@@ -32,6 +32,7 @@ const defaultFormData: Omit<MediaItem, 'id' | 'createdAt' | 'updatedAt'> = {
   titleOriginal: '',
   sourceUrl: '',
   type: 'anime',
+  format: '',
   coverImage: '',
   coverImageLarge: '',
   bannerImage: '',
@@ -94,6 +95,7 @@ export function MediaFormModal({
         titleOriginal: initialData.titleOriginal || '',
         sourceUrl: initialData.sourceUrl || '',
         type: initialData.type,
+        format: initialData.format || '',
         coverImage: initialData.coverImage,
         coverImageLarge: initialData.coverImageLarge || '',
         bannerImage: initialData.bannerImage || '',
@@ -308,6 +310,39 @@ export function MediaFormModal({
                   </div>
                 </div>
 
+                {/* Format Row */}
+                <div className="space-y-2">
+                  <Label className="text-card-foreground">Formato</Label>
+                  <Select
+                    value={formData.format || 'none'}
+                    onValueChange={(value) => setFormData({ ...formData, format: value === 'none' ? '' : value })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Selecione o formato" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Selecione...</SelectItem>
+                      {formData.type === 'anime' ? (
+                        <>
+                          <SelectItem value="TV">TV</SelectItem>
+                          <SelectItem value="Movie">Filme</SelectItem>
+                          <SelectItem value="OVA">OVA</SelectItem>
+                          <SelectItem value="ONA">ONA</SelectItem>
+                          <SelectItem value="Special">Especial</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="Manga">Mangá</SelectItem>
+                          <SelectItem value="One-shot">One-shot</SelectItem>
+                          <SelectItem value="Light Novel">Light Novel</SelectItem>
+                          <SelectItem value="Manhwa">Manhwa</SelectItem>
+                          <SelectItem value="Manhua">Manhua</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Cover Image URL */}
                 <div className="space-y-2">
                   <Label htmlFor="coverImage" className="text-card-foreground">URL da Capa *</Label>
@@ -471,26 +506,28 @@ export function MediaFormModal({
                 <div className="grid grid-cols-2 gap-4">
 
                   {/* Streaming Platforms */}
-                  <div className="col-span-2 space-y-2">
-                    <Label className="text-card-foreground">Onde Assistir? (Para o Calendário)</Label>
-                    <div className="flex flex-wrap gap-4 p-4 bg-secondary/30 rounded-xl">
-                      {PLATFORMS.map((platform) => (
-                        <div
-                          key={platform}
-                          onClick={() => toggleStreaming(platform)}
-                          className={cn(
-                            "flex flex-col items-center gap-2 p-2 rounded-lg cursor-pointer transition-all border-2 w-24",
-                            (formData.userStreaming || []).includes(platform)
-                              ? "border-primary bg-primary/10"
-                              : "border-transparent hover:bg-secondary/50"
-                          )}
-                        >
-                          <StreamingPlatformIcon platform={platform} size={32} />
-                          <span className="text-xs text-center font-medium leading-tight">{platform}</span>
-                        </div>
-                      ))}
+                  {isAnime && (
+                    <div className="col-span-2 space-y-2">
+                      <Label className="text-card-foreground">Onde Assistir? (Para o Calendário)</Label>
+                      <div className="flex flex-wrap gap-4 p-4 bg-secondary/30 rounded-xl">
+                        {PLATFORMS.map((platform) => (
+                          <div
+                            key={platform}
+                            onClick={() => toggleStreaming(platform)}
+                            className={cn(
+                              "flex flex-col items-center gap-2 p-2 rounded-lg cursor-pointer transition-all border-2 w-24",
+                              (formData.userStreaming || []).includes(platform)
+                                ? "border-primary bg-primary/10"
+                                : "border-transparent hover:bg-secondary/50"
+                            )}
+                          >
+                            <StreamingPlatformIcon platform={platform} size={32} />
+                            <span className="text-xs text-center font-medium leading-tight">{platform}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {isAnime && (
                     <div className="space-y-2">

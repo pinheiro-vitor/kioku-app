@@ -13,7 +13,7 @@ import { imageCache } from '@/lib/imageCache';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor } from '@dnd-kit/core';
 import { DroppableDayColumn } from '@/components/DroppableDayColumn';
 import { createPortal } from 'react-dom';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DAYS = [
     { id: 'monday', label: 'Segunda' },
@@ -222,8 +222,10 @@ export default function CalendarPage() {
         }
     };
 
+    const { logout } = useAuth();
+
     const handleLogout = async () => {
-        await supabase.auth.signOut();
+        await logout();
         toast({ title: 'Desconectado', description: 'Você saiu da sua conta.' });
     };
 
@@ -237,23 +239,6 @@ export default function CalendarPage() {
                             <h1 className="font-display text-3xl md:text-4xl text-foreground">
                                 Calendário Pessoal
                             </h1>
-                            {user ? (
-                                <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
-                                    <Cloud className="h-3 w-3 text-green-500" />
-                                    <span className="text-xs font-medium text-green-500">Sync Ativo</span>
-                                    <button onClick={handleLogout} className="ml-2 hover:text-red-400 transition-colors" title="Sair">
-                                        <LogOut className="h-3 w-3" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => setIsAuthModalOpen(true)}
-                                    className="ml-4 flex items-center gap-2 px-3 py-1 bg-secondary/50 hover:bg-secondary border border-white/5 rounded-full transition-colors cursor-pointer group"
-                                >
-                                    <Cloud className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                                    <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">Login / Sync</span>
-                                </button>
-                            )}
                         </div>
                         <p className="text-muted-foreground text-lg max-w-2xl">
                             Adicione os animes que você está acompanhando e organize sua semana.

@@ -1,20 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { User as SupabaseUser } from '@supabase/supabase-js';
+import api from '@/lib/api';
 
-// Adpating legacy User interface to avoid breaking changes everywhere immediately
-// but ideally we should update the app to use Supabase types directly.
 interface User {
-    id: string | number; // Allowing string for UUID
+    id: number | string;
     name: string;
     email: string;
     avatarUrl?: string;
+    profile?: { avatar_url?: string };
 }
 
 interface AuthContextType {
     user: User | null;
     token: string | null;
     login: (token: string, user: User) => void;
+    register: (data: any) => Promise<void>;
     logout: () => void;
     isLoading: boolean;
     updateProfile: (data: Partial<User> & { password?: string }) => Promise<void>;
@@ -24,95 +23,75 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
+    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        // Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-                fetchAndMapSupabaseUser(session.user, session.access_token);
-            } else {
-                setIsLoading(false);
-            }
-        });
-
-        // Listen for changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (session?.user) {
-                fetchAndMapSupabaseUser(session.user, session.access_token);
-            } else {
-                setUser(null);
-                setToken(null);
-                setIsLoading(false);
-            }
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    const fetchAndMapSupabaseUser = async (sbUser: SupabaseUser, accessToken: string) => {
+    const fetchUser = async () => {
         try {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('avatar_url')
-                .eq('id', sbUser.id)
-                .single();
-
-            const mappedUser: User = {
-                id: sbUser.id,
-                email: sbUser.email || '',
-                name: sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'Usuário',
-                avatarUrl: profile?.avatar_url
+            const response = await api.get('/user');
+            const userData = response.data;
+            const mappedUser = {
+                ...userData,
+                avatarUrl: userData.profile?.avatar_url
             };
             setUser(mappedUser);
-            setToken(accessToken);
         } catch (error) {
-            console.error('Error fetching user profile:', error);
-            // Fallback if profile fetch fails
-            const mappedUser: User = {
-                id: sbUser.id,
-                email: sbUser.email || '',
-                name: sbUser.user_metadata?.name || sbUser.email?.split('@')[0] || 'Usuário',
-            };
-            setUser(mappedUser);
-            setToken(accessToken);
+            console.error('Failed to fetch user', error);
+            // If 401, clear token
+            logout();
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Legacy login - now mostly no-op or just state update if needed manually
-    // But mostly we expect login via supabase.auth.signIn*
+    useEffect(() => {
+        if (token) {
+            // Set default header just in case, though interceptor does it
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            fetchUser();
+        } else {
+            setIsLoading(false);
+        }
+    }, [token]);
+
     const login = (newToken: string, newUser: User) => {
+        localStorage.setItem('token', newToken);
         setToken(newToken);
-        setUser(newUser);
+        const mappedUser = {
+            ...newUser,
+            avatarUrl: newUser.profile?.avatar_url || newUser.avatarUrl
+        };
+        setUser(mappedUser);
+    };
+
+    const register = async (data: any) => {
+        const response = await api.post('/register', data);
+        login(response.data.access_token, response.data.user);
     };
 
     const logout = async () => {
-        await supabase.auth.signOut();
-        setUser(null);
+        try {
+            if (token) await api.post('/logout');
+        } catch (e) {
+            console.error('Logout error', e);
+        }
+        localStorage.removeItem('token');
         setToken(null);
+        setUser(null);
     };
 
     const updateProfile = async (data: Partial<User> & { password?: string }) => {
-        // Basic profile update mapping
-        const updates: any = {};
-        if (data.name) updates.data = { name: data.name };
-        if (data.email) updates.email = data.email;
-        if (data.password) updates.password = data.password;
-
-        const { data: { user: updatedUser }, error } = await supabase.auth.updateUser(updates);
-
-        if (error) throw error;
-        if (updatedUser) {
-            // State update happens via onAuthStateChange automatically usually, 
-            // but we can force it if needed.
-        }
+        const response = await api.put('/user', data);
+        const userData = response.data.user;
+        const mappedUser = {
+            ...userData,
+            avatarUrl: userData.profile?.avatar_url
+        };
+        setUser(mappedUser);
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, isLoading, updateProfile }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, isLoading, updateProfile }}>
             {children}
         </AuthContext.Provider>
     );

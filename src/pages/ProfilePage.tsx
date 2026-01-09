@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { useMediaLibrary } from '@/hooks/useMediaLibrary';
 
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 
 import { Mail, Calendar, TrendingUp, Clock, Play, BookOpen, CheckCircle, Trophy, X, Heart, Medal, Star, Sword, Anchor, Zap, FlaskConical, Ghost, Search, Globe, Bot, Brain, Activity, User as UserIcon, Lock, Settings, Camera } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import api from '@/lib/api';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -102,36 +103,18 @@ export default function UserProfile({ }: UserProfileProps) {
 
         try {
             setIsUpdating(true);
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            const formData = new FormData();
+            formData.append('avatar', file);
 
-            // Upload to Supabase Storage
-            const { error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, file);
-
-            if (uploadError) throw uploadError;
-
-            // Get Public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(filePath);
-
-            // Update Profile
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: user.id,
-                    avatar_url: publicUrl,
-                    updated_at: new Date().toISOString(),
-                });
-
-            if (updateError) throw updateError;
+            const { data } = await api.post('/profile/avatar', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
 
             toast({ title: 'Sucesso', description: 'Foto de perfil atualizada!' });
 
-            // Force reload to update context (temporary solution)
+            // Reload page to reflect changes (or context could expose a refresh)
             window.location.reload();
 
         } catch (error) {
@@ -611,6 +594,8 @@ export default function UserProfile({ }: UserProfileProps) {
                                 </form>
                             </CardContent>
                         </Card>
+
+
                     </TabsContent>
 
                     <TabsContent value="badges" className="animate-slide-up">

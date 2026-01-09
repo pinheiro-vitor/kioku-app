@@ -17,6 +17,7 @@ export interface MediaItem {
   titleOriginal?: string;
   sourceUrl?: string;
   type: MediaType;
+  format?: string; // TV, Movie, OVA, One-shot, etc.
   coverImage: string;
   coverImageLarge?: string;
   bannerImage?: string;

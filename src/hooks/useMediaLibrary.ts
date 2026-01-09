@@ -1,9 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MediaItem, MediaType, MediaStatus, CustomList, CreateMediaItemDTO, UpdateMediaItemDTO } from '@/types/media';
-import { useAuth } from '@/contexts/AuthContext'; // Legacy context, might need cleanup later
+import { MediaItem, MediaType, MediaStatus, CreateMediaItemDTO, UpdateMediaItemDTO } from '@/types/media';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import api from '@/lib/api';
 
 export function useMediaLibrary() {
   const { toast } = useToast();
@@ -33,6 +32,7 @@ export function useMediaLibrary() {
     tags: data.tags || [],
     studio: data.studio,
     author: data.author,
+    format: data.format,
     releaseYear: data.release_year,
     season: data.season,
     ageRating: data.age_rating,
@@ -45,74 +45,53 @@ export function useMediaLibrary() {
     rewatchCount: data.rewatch_count,
     isFavorite: Boolean(data.is_favorite),
     notes: data.notes,
-    customLists: [], // TODO: Custom Lists implementation in Supabase
+    customLists: data.custom_lists?.map((l: any) => l.id) || [],
     createdAt: data.created_at,
     updatedAt: data.updated_at,
+    streamingServices: data.streaming_services || [],
+    userStreaming: data.user_streaming || [],
   }), []);
 
-  // Fetch Media Items from Supabase
-  const { data: items = [], isLoading: isLoadingItems } = useQuery({
+
+
+  // Fetch Media Items
+  const { data: mediaData, isLoading: isLoadingItems } = useQuery({
     queryKey: ['media-items'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return [];
-
-      const { data, error } = await supabase
-        .from('media_items')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase fetch error:', error);
-        throw error;
-      }
+      const { data } = await api.get('/media');
       return data.map(mapBackendToFrontend);
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
+  const items = useMemo(() => mediaData || [], [mediaData]);
+
   // Fetch Custom Lists
-  const { data: customLists = [], isLoading: isLoadingLists } = useQuery({
+  const { data: listsData, isLoading: isLoadingLists } = useQuery({
     queryKey: ['custom-lists'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return [];
-
-      const { data, error } = await supabase
-        .from('custom_lists')
-        .select(`
-          *,
-          media_list_items (media_id)
-        `)
-        .order('name');
-
-      if (error) {
-        console.error('Error fetching lists:', error);
-        throw error;
-      }
-
+      const { data } = await api.get('/lists');
       return data.map((list: any) => ({
         id: list.id,
         name: list.name,
         description: list.description,
         icon: list.icon,
         color: list.color,
-        itemIds: list.media_list_items?.map((i: any) => i.media_id) || [],
+        itemIds: list.media_items?.map((i: any) => i.id) || [],
         createdAt: list.created_at,
       }));
     }
   });
+
+  const customLists = useMemo(() => listsData || [], [listsData]);
 
   const isLoaded = !isLoadingItems && !isLoadingLists;
 
   // Mutations
   const addItemMutation = useMutation({
     mutationFn: async (item: CreateMediaItemDTO) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
+      // Map frontend camelCase to backend snake_case
       const payload = {
-        user_id: session.user.id,
         mal_id: item.malId,
         title: item.title,
         title_original: item.titleOriginal,
@@ -134,6 +113,7 @@ export function useMediaLibrary() {
         tags: item.tags,
         studio: item.studio,
         author: item.author,
+        format: item.format,
         release_year: item.releaseYear,
         season: item.season,
         age_rating: item.ageRating,
@@ -143,11 +123,12 @@ export function useMediaLibrary() {
         rewatch_count: item.rewatchCount,
         is_favorite: item.isFavorite,
         notes: item.notes,
-        broadcast_day: item.broadcastDay
+        broadcast_day: item.broadcastDay,
+        streaming_services: item.streamingServices,
+        user_streaming: item.userStreaming
       };
 
-      const { data, error } = await supabase.from('media_items').insert(payload).select().single();
-      if (error) throw error;
+      const { data } = await api.post('/media', payload);
       return data;
     },
     onSuccess: () => {
@@ -163,8 +144,9 @@ export function useMediaLibrary() {
   const updateItemMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: UpdateMediaItemDTO }) => {
       const payload: any = {};
-      // Mapping updates to snake_case
       if (updates.title !== undefined) payload.title = updates.title;
+      // ... mapping logic remains largely same or can be simplified if we trust loose mapping
+      // For now, mapping explicitly to be safe
       if (updates.titleOriginal !== undefined) payload.title_original = updates.titleOriginal;
       if (updates.sourceUrl !== undefined) payload.source_url = updates.sourceUrl;
       if (updates.type !== undefined) payload.type = updates.type;
@@ -182,6 +164,7 @@ export function useMediaLibrary() {
       if (updates.tags !== undefined) payload.tags = updates.tags;
       if (updates.studio !== undefined) payload.studio = updates.studio;
       if (updates.author !== undefined) payload.author = updates.author;
+      if (updates.format !== undefined) payload.format = updates.format;
       if (updates.releaseYear !== undefined) payload.release_year = updates.releaseYear;
       if (updates.season !== undefined) payload.season = updates.season;
       if (updates.ageRating !== undefined) payload.age_rating = updates.ageRating;
@@ -194,9 +177,9 @@ export function useMediaLibrary() {
       if (updates.bannerImage !== undefined) payload.banner_image = updates.bannerImage;
       if (updates.coverImage !== undefined) payload.cover_image = updates.coverImage;
       if (updates.broadcastDay !== undefined) payload.broadcast_day = updates.broadcastDay;
+      if (updates.userStreaming !== undefined) payload.user_streaming = updates.userStreaming;
 
-      const { error } = await supabase.from('media_items').update(payload).eq('id', id);
-      if (error) throw error;
+      await api.put(`/media/${id}`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media-items'] });
@@ -209,33 +192,18 @@ export function useMediaLibrary() {
 
   const deleteItemMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('media_items').delete().eq('id', id);
-      if (error) throw error;
+      await api.delete(`/media/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media-items'] });
       toast({ title: 'Item removido.' });
     },
-    onError: (error) => {
-      console.error('Failed to delete item', error);
-      toast({ title: 'Erro ao remover item', variant: 'destructive' });
-    }
+    onError: () => toast({ title: 'Erro ao remover item', variant: 'destructive' })
   });
 
-  // Custom List Mutations
   const addCustomListMutation = useMutation({
     mutationFn: async (list: { name: string; description?: string; icon?: string; color?: string }) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const { error } = await supabase.from('custom_lists').insert({
-        user_id: session.user.id,
-        name: list.name,
-        description: list.description,
-        icon: list.icon || 'Heart',
-        color: list.color || '#ef4444'
-      });
-      if (error) throw error;
+      await api.post('/lists', list);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
@@ -245,8 +213,7 @@ export function useMediaLibrary() {
 
   const updateCustomListMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      const { error } = await supabase.from('custom_lists').update(updates).eq('id', id);
-      if (error) throw error;
+      await api.put(`/lists/${id}`, updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
@@ -256,8 +223,7 @@ export function useMediaLibrary() {
 
   const deleteCustomListMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('custom_lists').delete().eq('id', id);
-      if (error) throw error;
+      await api.delete(`/lists/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
@@ -267,34 +233,27 @@ export function useMediaLibrary() {
 
   const addItemToListMutation = useMutation({
     mutationFn: async ({ listId, mediaId }: { listId: string; mediaId: string }) => {
-      const { error } = await supabase.from('media_list_items').insert({
-        list_id: listId,
-        media_id: mediaId
-      });
-      if (error) throw error;
+      await api.post(`/lists/${listId}/items`, { media_id: mediaId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['media-items'] }); // Invalidate media to update customLists array
       toast({ title: 'Adicionado à lista!' });
     }
   });
 
   const removeItemFromListMutation = useMutation({
     mutationFn: async ({ listId, mediaId }: { listId: string; mediaId: string }) => {
-      const { error } = await supabase.from('media_list_items')
-        .delete()
-        .eq('list_id', listId)
-        .eq('media_id', mediaId);
-      if (error) throw error;
+      await api.delete(`/lists/${listId}/items/${mediaId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['media-items'] });
       toast({ title: 'Removido da lista.' });
     }
   });
 
-  // Wrappers to match previous API
-  // Wrappers to match previous API
+  // Wrappers
   const addItem = (item: CreateMediaItemDTO) => addItemMutation.mutateAsync(item);
   const updateItem = (id: string, updates: UpdateMediaItemDTO) => updateItemMutation.mutateAsync({ id, updates });
   const deleteItem = (id: string) => deleteItemMutation.mutateAsync(id);
@@ -310,7 +269,7 @@ export function useMediaLibrary() {
   const addItemToList = (itemId: string, listId: string) => addItemToListMutation.mutateAsync({ listId, mediaId: itemId });
   const removeItemFromList = (itemId: string, listId: string) => removeItemFromListMutation.mutateAsync({ listId, mediaId: itemId });
 
-  // Read-only helpers
+  // Read-only helpers (same as before)
   const getItemsByType = (type: MediaType | 'all') => {
     if (type === 'all') return items;
     return items.filter((item: MediaItem) => item.type === type);
@@ -323,10 +282,7 @@ export function useMediaLibrary() {
   const getItemsByList = (listId: string) => {
     return items.filter((item: MediaItem) => {
       if (!item.customLists) return false;
-      return item.customLists.some(l =>
-        (typeof l === 'string' && l === listId) ||
-        (typeof l === 'object' && (l as any).id == listId)
-      );
+      return item.customLists.some(l => l === listId);
     });
   };
 
@@ -357,7 +313,7 @@ export function useMediaLibrary() {
     });
   };
 
-  // Statistics Calculation (same logic)
+  // Statistics Calculation
   const getStatistics = useCallback(() => {
     const totalItems = items.length;
     const totalAnime = items.filter((i: MediaItem) => i.type === 'anime').length;
@@ -372,7 +328,8 @@ export function useMediaLibrary() {
     const completedItems = items.filter((i: MediaItem) => i.status === 'completed').length;
     const watchingItems = items.filter((i: MediaItem) => i.status === 'watching' || i.status === 'reading').length;
     const droppedItems = items.filter((i: MediaItem) => i.status === 'dropped').length;
-    const averageScore = items.length > 0 ? items.filter((i: MediaItem) => i.score > 0).reduce((acc: number, i: MediaItem) => acc + i.score, 0) / items.filter((i: MediaItem) => i.score > 0).length : 0;
+    const itemsWithScore = items.filter((i: MediaItem) => i.score > 0);
+    const averageScore = itemsWithScore.length > 0 ? itemsWithScore.reduce((acc: number, i: MediaItem) => acc + i.score, 0) / itemsWithScore.length : 0;
 
     const genreCounts: Record<string, number> = {};
     items.forEach((item: MediaItem) => {
@@ -400,12 +357,10 @@ export function useMediaLibrary() {
       { status: 'Planejado', count: items.filter((i: MediaItem) => i.status === 'plan-to-watch').length },
     ];
 
-    const activityHistory: any[] = [];
-
     return {
       totalItems, totalAnime, totalManga, totalManhwa, totalEpisodes, totalChapters, totalVolumes,
       totalMinutes, totalHours, totalDays, completedItems, watchingItems, droppedItems, averageScore,
-      topGenres, scoreDistribution, statusDistribution, activityHistory
+      topGenres, scoreDistribution, statusDistribution, activityHistory: []
     };
   }, [items]);
 
