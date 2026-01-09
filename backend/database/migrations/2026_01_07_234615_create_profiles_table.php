@@ -10,8 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('media_items', function (Blueprint $table) {
-            $table->string('cover_image_large')->nullable()->after('cover_image');
+        Schema::create('profiles', function (Blueprint $table) {
+            $table->foreignId('user_id')->primary()->constrained('users')->onDelete('cascade');
+            $table->text('avatar_url')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -20,8 +22,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('media_items', function (Blueprint $table) {
-            $table->dropColumn('cover_image_large');
-        });
+        Schema::dropIfExists('profiles');
     }
 };

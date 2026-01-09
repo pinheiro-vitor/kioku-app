@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use App\Models\CustomList;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,57 +10,53 @@ class CustomListController extends Controller
 {
     public function index()
     {
-        return Auth::user()->customLists()->with('mediaItems')->get();
+        return Auth::user()->customLists()->with('mediaItems:id')->get();
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'icon' => 'required|string',
-            'color' => 'required|string',
+            'name' => 'required|string',
+            'description' => 'nullable|string',
+            'icon' => 'nullable|string',
+            'color' => 'nullable|string',
         ]);
 
-        $customList = Auth::user()->customLists()->create($request->all());
-
-        if ($request->has('media_item_ids')) {
-            $customList->mediaItems()->sync($request->media_item_ids);
-        }
-
-        return response()->json($customList->load('mediaItems'), 201);
+        $list = Auth::user()->customLists()->create($validated);
+        return response()->json($list, 201);
     }
 
-    public function show(CustomList $customList)
+    public function update(Request $request, string $id)
     {
-        if ($customList->user_id !== Auth::id()) {
-            abort(403);
-        }
-        return $customList->load('mediaItems');
+        $list = Auth::user()->customLists()->findOrFail($id);
+        $list->update($request->only(['name', 'description', 'icon', 'color']));
+        return response()->json($list);
     }
 
-    public function update(Request $request, CustomList $customList)
+    public function destroy(string $id)
     {
-        if ($customList->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        $customList->update($request->except('media_item_ids'));
-
-        if ($request->has('media_item_ids')) {
-            $customList->mediaItems()->sync($request->media_item_ids);
-        }
-
-        return $customList->load('mediaItems');
+        $list = Auth::user()->customLists()->findOrFail($id);
+        $list->delete();
+        return response()->json(['message' => 'Deleted']);
     }
 
-    public function destroy(CustomList $customList)
+    public function addMedia(Request $request, string $id)
     {
-        if ($customList->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $list = Auth::user()->customLists()->findOrFail($id);
+        $mediaId = $request->input('media_id');
 
-        $customList->delete();
+        // Ensure media belongs to user
+        $media = Auth::user()->mediaItems()->findOrFail($mediaId);
 
-        return response()->noContent();
+        $list->mediaItems()->syncWithoutDetaching([$mediaId]);
+
+        return response()->json(['message' => 'Added']);
+    }
+
+    public function removeMedia(Request $request, string $id, string $mediaId)
+    {
+        $list = Auth::user()->customLists()->findOrFail($id);
+        $list->mediaItems()->detach($mediaId);
+        return response()->json(['message' => 'Removed']);
     }
 }

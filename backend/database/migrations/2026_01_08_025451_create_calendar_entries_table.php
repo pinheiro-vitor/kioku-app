@@ -10,13 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('custom_lists', function (Blueprint $table) {
-            $table->id();
+        Schema::create('calendar_entries', function (Blueprint $table) {
+            $table->uuid('id')->primary();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('icon');
-            $table->string('color');
+            $table->string('title');
+            $table->string('image')->nullable();
+            $table->string('day_of_week');
+            $table->json('streaming')->nullable();
+            $table->string('time')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('custom_lists');
+        Schema::dropIfExists('calendar_entries');
     }
 };

@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\MediaItem;
 use App\Models\Comment;
 use App\Models\CustomList;
+use App\Models\CalendarEntry;
 
 class User extends Authenticatable
 {
@@ -63,5 +64,14 @@ class User extends Authenticatable
     public function customLists()
     {
         return $this->hasMany(CustomList::class);
+    }
+
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+    public function calendarEntries()
+    {
+        return $this->hasMany(CalendarEntry::class);
     }
 }

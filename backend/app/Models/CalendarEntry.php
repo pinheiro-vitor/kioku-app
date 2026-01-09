@@ -3,23 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use App\Models\MediaItem;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class CustomList extends Model
+class CalendarEntry extends Model
 {
     use HasUuids;
+
     protected $guarded = [];
+
+    protected $casts = [
+        'streaming' => 'array',
+    ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function mediaItems()
-    {
-        return $this->belongsToMany(MediaItem::class, 'media_list_items');
     }
 }
