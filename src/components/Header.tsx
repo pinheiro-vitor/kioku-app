@@ -1,4 +1,4 @@
-import { Moon, Sun, Plus, BookOpen, BarChart3, Menu, User, Calendar, Compass, LogOut } from 'lucide-react';
+import { Moon, Sun, Plus, BookOpen, BarChart3, Menu, User, Calendar, Compass, LogOut, Home } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -69,8 +69,8 @@ export function Header({
                       : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                   )}
                 >
-                  <BarChart3 className="h-4 w-4" />
-                  Dashboard
+                  <Home className="h-4 w-4" />
+                  Início
                 </Button>
               </Link>
               <Link to="/library">
@@ -179,8 +179,8 @@ export function Header({
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild>
                       <Link to="/dashboard" className="flex items-center gap-2 w-full cursor-pointer">
-                        <BarChart3 className="h-4 w-4" />
-                        Dashboard
+                        <Home className="h-4 w-4" />
+                        Início
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>

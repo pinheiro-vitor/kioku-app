@@ -357,10 +357,53 @@ export function useMediaLibrary() {
       { status: 'Planejado', count: items.filter((i: MediaItem) => i.status === 'plan-to-watch').length },
     ];
 
+    const formatCounts: Record<string, number> = {};
+    items.forEach((item: MediaItem) => {
+      const fmt = item.format || 'Outros';
+      formatCounts[fmt] = (formatCounts[fmt] || 0) + 1;
+    });
+
+    const formatDistribution = Object.entries(formatCounts)
+      .map(([format, count]) => ({ name: format, value: count }))
+      .sort((a, b) => b.value - a.value);
+
+    // Calculate Activity History (Last 12 months based on endDate)
+    const today = new Date();
+    const activityMap = new Map<string, number>();
+
+    // Initialize last 12 months with 0
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      activityMap.set(key, 0);
+    }
+
+    items.forEach((item: MediaItem) => {
+      if (item.status === 'completed' && item.endDate) {
+        const date = new Date(item.endDate);
+        if (!isNaN(date.getTime())) {
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (activityMap.has(key)) {
+            activityMap.set(key, (activityMap.get(key) || 0) + 1);
+          }
+        }
+      }
+    });
+
+    const activityHistory = Array.from(activityMap.entries()).map(([date, count]) => {
+      const [year, month] = date.split('-');
+      const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('pt-BR', { month: 'short' });
+      return {
+        date: `${monthName}`,
+        fullDate: date,
+        count
+      };
+    });
+
     return {
       totalItems, totalAnime, totalManga, totalManhwa, totalEpisodes, totalChapters, totalVolumes,
       totalMinutes, totalHours, totalDays, completedItems, watchingItems, droppedItems, averageScore,
-      topGenres, scoreDistribution, statusDistribution, activityHistory: []
+      topGenres, scoreDistribution, statusDistribution, activityHistory, formatDistribution
     };
   }, [items]);
 

@@ -24,6 +24,7 @@ interface StatisticsData {
   scoreDistribution: { score: number; count: number }[];
   statusDistribution: { status: string; count: number }[];
   activityHistory: { date: string; count: number; fullDate: string }[];
+  formatDistribution: { name: string; value: number }[];
 }
 
 interface StatisticsPanelProps {
@@ -158,7 +159,8 @@ export function StatisticsPanel({ stats, className }: StatisticsPanelProps) {
           ) : (
             <p className="text-muted-foreground text-center py-8">Sem dados</p>
           )}
-          <div className="flex justify-center gap-4 mt-4">
+          {/* Legend */}
+          <div className="flex flex-wrap justify-center gap-4 mt-4">
             {typeData.map((d) => (
               <div key={d.name} className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
@@ -173,11 +175,18 @@ export function StatisticsPanel({ stats, className }: StatisticsPanelProps) {
         {/* Score Distribution */}
         <div className="bg-card rounded-2xl p-6 shadow-kioku">
           <h3 className="font-display text-xl text-card-foreground mb-4">Distribuição de Notas</h3>
-          <div className="h-48">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.scoreDistribution.filter((d) => d.count > 0)}>
-                <XAxis dataKey="score" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+              <BarChart data={stats.scoreDistribution}>
+                <XAxis
+                  dataKey="score"
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(val) => val.toString()}
+                />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} width={30} />
                 <Tooltip
                   cursor={{ fill: 'hsl(var(--muted)/0.2)' }}
                   contentStyle={{
@@ -185,6 +194,7 @@ export function StatisticsPanel({ stats, className }: StatisticsPanelProps) {
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '0.75rem',
                   }}
+                  labelFormatter={(label) => `Nota ${label}`}
                 />
                 <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>

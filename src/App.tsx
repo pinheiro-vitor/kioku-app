@@ -17,7 +17,7 @@ const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 const PublicHome = lazy(() => import('@/pages/PublicHome'));
 const BrowsePage = lazy(() => import('@/pages/BrowsePage'));
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const HomePage = lazy(() => import('@/pages/HomePage'));
 const LibraryPage = lazy(() => import('@/pages/LibraryPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const CalendarPage = lazy(() => import('@/pages/CalendarPage'));
@@ -44,7 +44,7 @@ const App = () => (
                     {/* Protected Routes */}
                     <Route element={<ProtectedRoute />}>
                       <Route element={<AppLayout />}>
-                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/dashboard" element={<HomePage />} />
                         <Route path="/library" element={<LibraryPage />} />
                         <Route path="/browse" element={<BrowsePage />} />
                         <Route path="/profile" element={<ProfilePage />} />
