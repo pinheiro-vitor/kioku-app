@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { differenceInDays } from 'date-fns';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown } from 'lucide-react';
 
 import { AdvancedSearch } from '@/components/AdvancedSearch';
 import { CustomListsManager } from '@/components/CustomListsManager';
@@ -71,6 +71,12 @@ const LibraryPage = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
   const [editingItem, setEditingItem] = useState<MediaItem | undefined>(undefined);
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [filters, activeList]);
 
   // Filter and sort items
   const filteredItems = useMemo(() => {
@@ -369,20 +375,39 @@ const LibraryPage = () => {
 
             {/* Media Grid */}
             {filteredItems.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-                {filteredItems.map((item, index) => (
-                  <div
-                    key={item.id}
-                    style={{ animationDelay: `${index * 50}ms` }}
-                    className="animate-slide-up opacity-0"
-                  >
-                    <MediaCard
-                      item={item}
-                      onClick={() => handleCardClick(item)}
-                      onToggleFavorite={() => handleToggleFavorite(item.id)}
-                    />
+              <div className="space-y-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+                  {filteredItems.slice(0, visibleCount).map((item, index) => (
+                    <div
+                      key={item.id}
+                      style={{ animationDelay: `${index * 50}ms` }}
+                      className="animate-slide-up opacity-0"
+                    >
+                      <MediaCard
+                        item={item}
+                        onClick={() => handleCardClick(item)}
+                        onToggleFavorite={() => handleToggleFavorite(item.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {filteredItems.length > visibleCount && (
+                  <div className="flex justify-center pt-4 pb-8 relative">
+                    <div className="absolute inset-x-0 bottom-full h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      onClick={() => setVisibleCount(filteredItems.length)}
+                      className="group relative z-10 gap-2 rounded-full pl-6 pr-8 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                    >
+                      <div className="bg-primary/10 p-1 rounded-full group-hover:bg-primary/20 transition-colors">
+                        <ChevronDown className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="font-display font-medium">Ver {filteredItems.length - visibleCount} itens restantes</span>
+                    </Button>
                   </div>
-                ))}
+                )}
               </div>
             ) : (
               <EmptyState onAddNew={handleAddNew} />
