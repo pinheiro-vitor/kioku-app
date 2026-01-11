@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Heart, Zap, Star, Bookmark, Flame, Award } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Heart, Zap, Star, Bookmark, Flame, Award, Globe, Lock } from 'lucide-react';
 import { CustomList } from '@/types/media';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Sheet,
   SheetContent,
@@ -18,7 +19,7 @@ interface CustomListsManagerProps {
   lists: CustomList[];
   activeList: string | null;
   onSelectList: (listId: string | null) => void;
-  onAddList: (list: { name: string; description?: string; icon?: string; color?: string }) => void;
+  onAddList: (list: { name: string; description?: string; icon?: string; color?: string; isPublic: boolean; coverImage?: string }) => void;
   onUpdateList: (id: string, updates: any) => void;
   onDeleteList: (id: string) => void;
   onAddMedia?: () => void;
@@ -54,6 +55,8 @@ export function CustomListsManager({
     description: '',
     icon: 'Heart',
     color: '#ef4444',
+    isPublic: false,
+    coverImage: '',
   });
 
   const handleCreate = () => {
@@ -63,12 +66,16 @@ export function CustomListsManager({
         description: newList.description,
         icon: newList.icon,
         color: newList.color,
+        isPublic: newList.isPublic,
+        coverImage: newList.coverImage,
       });
       setNewList({
         name: '',
         description: '',
         icon: 'Heart',
         color: '#ef4444',
+        isPublic: false,
+        coverImage: '',
       });
       setIsCreateOpen(false);
     }
@@ -81,6 +88,8 @@ export function CustomListsManager({
         description: editingList.description,
         icon: editingList.icon,
         color: editingList.color,
+        isPublic: editingList.isPublic,
+        coverImage: editingList.coverImage,
       });
       setEditingList(null);
     }
@@ -191,6 +200,31 @@ export function CustomListsManager({
                 />
               </div>
 
+              {/* Visibility and Cover Image */}
+              <div className="flex items-center justify-between p-3 border border-border/50 rounded-xl bg-secondary/20">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-medium flex items-center gap-2">
+                    {newList.isPublic ? <Globe className="h-4 w-4 text-primary" /> : <Lock className="h-4 w-4 text-muted-foreground" />}
+                    Lista Pública
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Visível no seu perfil público</p>
+                </div>
+                <Switch
+                  checked={newList.isPublic}
+                  onCheckedChange={(checked) => setNewList({ ...newList, isPublic: checked })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Capa (URL)</Label>
+                <Input
+                  value={newList.coverImage}
+                  onChange={(e) => setNewList({ ...newList, coverImage: e.target.value })}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                  className="rounded-xl"
+                />
+              </div>
+
               {/* Icon Selection */}
               <div className="space-y-2">
                 <Label>Ícone</Label>
@@ -280,6 +314,31 @@ export function CustomListsManager({
                 <Input
                   value={editingList.description}
                   onChange={(e) => setEditingList({ ...editingList, description: e.target.value })}
+                  className="rounded-xl"
+                />
+              </div>
+
+              {/* Edit Visibility and Cover Image */}
+              <div className="flex items-center justify-between p-3 border border-border/50 rounded-xl bg-secondary/20">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-medium flex items-center gap-2">
+                    {editingList.isPublic ? <Globe className="h-4 w-4 text-primary" /> : <Lock className="h-4 w-4 text-muted-foreground" />}
+                    Lista Pública
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Visível no seu perfil público</p>
+                </div>
+                <Switch
+                  checked={editingList.isPublic}
+                  onCheckedChange={(checked) => setEditingList({ ...editingList, isPublic: checked })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Capa (URL)</Label>
+                <Input
+                  value={editingList.coverImage || ''}
+                  onChange={(e) => setEditingList({ ...editingList, coverImage: e.target.value })}
+                  placeholder="https://exemplo.com/imagem.jpg"
                   className="rounded-xl"
                 />
               </div>

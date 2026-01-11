@@ -71,6 +71,8 @@ export interface CustomList {
   icon?: string;
   color?: string;
   itemIds?: string[]; // IDs of media items in this list
+  isPublic: boolean;
+  coverImage?: string;
   createdAt: string;
 }
 

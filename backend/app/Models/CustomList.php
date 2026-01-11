@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 class CustomList extends Model
 {
     use HasUuids;
-    protected $guarded = [];
+    protected $fillable = ['user_id', 'name', 'description', 'is_public', 'cover_image'];
 
     public function user()
     {

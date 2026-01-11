@@ -20,6 +20,8 @@ class CustomListController extends Controller
             'description' => 'nullable|string',
             'icon' => 'nullable|string',
             'color' => 'nullable|string',
+            'is_public' => 'boolean',
+            'cover_image' => 'nullable|string',
         ]);
 
         $list = Auth::user()->customLists()->create($validated);
@@ -29,7 +31,7 @@ class CustomListController extends Controller
     public function update(Request $request, string $id)
     {
         $list = Auth::user()->customLists()->findOrFail($id);
-        $list->update($request->only(['name', 'description', 'icon', 'color']));
+        $list->update($request->only(['name', 'description', 'icon', 'color', 'is_public', 'cover_image']));
         return response()->json($list);
     }
 
